@@ -13,7 +13,7 @@ service OrderManagement {
 }
 
 message OrderRequest {
-  string order = 1;
+  repeated string order = 1;
 }
 
 message OrderResponse {

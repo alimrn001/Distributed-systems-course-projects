@@ -14,7 +14,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x15OrderManagement.proto\x12\x10order_management\"\x1d\n\x0cOrderRequest\x12\r\n\x05order\x18\x01 \x01(\t\"0\n\rOrderResponse\x12\x0c\n\x04item\x18\x01 \x01(\t\x12\x11\n\ttimestamp\x18\x02 \x01(\t2\xef\x02\n\x0fOrderManagement\x12K\n\x08getOrder\x12\x1e.order_management.OrderRequest\x1a\x1f.order_management.OrderResponse\x12Y\n\x14getOrderClientStream\x12\x1e.order_management.OrderRequest\x1a\x1f.order_management.OrderResponse(\x01\x12Y\n\x14getOrderServerStream\x12\x1e.order_management.OrderRequest\x1a\x1f.order_management.OrderResponse0\x01\x12Y\n\x12getOrderBidiStream\x12\x1e.order_management.OrderRequest\x1a\x1f.order_management.OrderResponse(\x01\x30\x01\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x15OrderManagement.proto\x12\x10order_management\"\x1d\n\x0cOrderRequest\x12\r\n\x05order\x18\x01 \x03(\t\"0\n\rOrderResponse\x12\x0c\n\x04item\x18\x01 \x01(\t\x12\x11\n\ttimestamp\x18\x02 \x01(\t2\xef\x02\n\x0fOrderManagement\x12K\n\x08getOrder\x12\x1e.order_management.OrderRequest\x1a\x1f.order_management.OrderResponse\x12Y\n\x14getOrderClientStream\x12\x1e.order_management.OrderRequest\x1a\x1f.order_management.OrderResponse(\x01\x12Y\n\x14getOrderServerStream\x12\x1e.order_management.OrderRequest\x1a\x1f.order_management.OrderResponse0\x01\x12Y\n\x12getOrderBidiStream\x12\x1e.order_management.OrderRequest\x1a\x1f.order_management.OrderResponse(\x01\x30\x01\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
