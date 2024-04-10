@@ -1,5 +1,6 @@
 from concurrent import futures
 import logging
+import time
 
 import grpc
 import OrderManagement_pb2
@@ -10,13 +11,14 @@ ServerOrders = ['banana', 'apple', 'orange', 'grape',
 
 
 class OrderManager(OrderManagement_pb2_grpc.OrderManagementServicer):
-    def GetOrder(self, request, context):
-        response = order_management_pb2.OrderResponse()
+    def getOrder(self, request, context):
+        response = OrderManagement_pb2.OrderResponse()
         for order in request.order:
             if order in ServerOrders:
                 response.item = order
                 response.timestamp = str(time.time())
-                yield response
+                return response
+        return response
 
 
 def serve():
