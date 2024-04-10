@@ -45,6 +45,13 @@ def run():
         responseClientStream = stub.getOrderClientStream(request_iterator)
         printResponseItems(responseClientStream)
 
+        print("\n----------------------------------------------------------\n\nExecuting the server-stream approach...\n\n")
+
+        responseServerStream = stub.getOrderServerStream(
+            OrderManagement_pb2.OrderRequest(order=user_order_items))
+        for serverStreamResponseItem in responseServerStream:
+            printResponseItems(serverStreamResponseItem)
+
 
 if __name__ == "__main__":
     logging.basicConfig()
