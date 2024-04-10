@@ -17,6 +17,6 @@ message OrderRequest {
 }
 
 message OrderResponse {
-  string item = 1;
-  string timestamp = 2;
+  repeated string item = 1;
+  repeated string timestamp = 2;
 }

@@ -15,6 +15,6 @@ class OrderResponse(_message.Message):
     __slots__ = ("item", "timestamp")
     ITEM_FIELD_NUMBER: _ClassVar[int]
     TIMESTAMP_FIELD_NUMBER: _ClassVar[int]
-    item: str
-    timestamp: str
-    def __init__(self, item: _Optional[str] = ..., timestamp: _Optional[str] = ...) -> None: ...
+    item: _containers.RepeatedScalarFieldContainer[str]
+    timestamp: _containers.RepeatedScalarFieldContainer[str]
+    def __init__(self, item: _Optional[_Iterable[str]] = ..., timestamp: _Optional[_Iterable[str]] = ...) -> None: ...

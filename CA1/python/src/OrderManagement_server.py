@@ -15,9 +15,9 @@ class OrderManager(OrderManagement_pb2_grpc.OrderManagementServicer):
         response = OrderManagement_pb2.OrderResponse()
         for order in request.order:
             if order in ServerOrders:
-                response.item = order
-                response.timestamp = str(time.time())
-                return response
+                response.item.append(order)
+                response.timestamp.append(str(time.time()))
+                # return response
         return response
 
 
