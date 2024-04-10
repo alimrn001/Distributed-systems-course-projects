@@ -19,6 +19,32 @@ class OrderManager(OrderManagement_pb2_grpc.OrderManagementServicer):
                 response.timestamp.append(str(time.time()))
                 # return response
         return response
+    
+    def getOrderClientStream(self, request_iterator, context):
+        response = OrderManagement_pb2.OrderResponse()
+        for request in request_iterator:
+            for order in request.order:
+                if order in ServerOrders:
+                    response.item.append(order)
+                    response.timestamp.append(str(time.time()))
+        return response
+
+    def getOrderServerStream(self, request, context):
+        for order in request.order:
+            if order in ServerOrders:
+                response = OrderManagement_pb2.OrderResponse()
+                response.item.append(order)
+                response.timestamp.append(str(time.time()))
+                yield response
+
+    def getOrderBidiStream(self, request_iterator, context):
+        for request in request_iterator:
+            response = OrderManagement_pb2.OrderResponse()
+            for order in request.order:
+                if order in ServerOrders:
+                    response.item.append(order)
+                    response.timestamp.append(str(time.time()))
+            yield response
 
 
 def serve():
