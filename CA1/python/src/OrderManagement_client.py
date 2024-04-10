@@ -1,7 +1,7 @@
 from __future__ import print_function
 
 import logging
-
+import time
 import grpc
 import OrderManagement_pb2
 import OrderManagement_pb2_grpc
@@ -27,8 +27,6 @@ def run():
 
         print("Please enter at least one element.")
 
-    # print("Array:", user_order_items)
-
     with grpc.insecure_channel("localhost:50052") as channel:
 
         print("\n----------------------------------------------------------\n\nExecuting the unary RPC approach...\n\n")
@@ -51,6 +49,15 @@ def run():
             OrderManagement_pb2.OrderRequest(order=user_order_items))
         for serverStreamResponseItem in responseServerStream:
             printResponseItems(serverStreamResponseItem)
+
+        print("\n----------------------------------------------------------\n\nExecuting the bidirectional-stream approach...\n\n")
+
+        try:
+            cnt = 0
+            responseBidiStream = stub.getOrderBidiStream(
+                request_iterator)  # bug: response is empty!
+        except Exception as e:
+            print("error " + str(e))
 
 
 if __name__ == "__main__":
