@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package order_management;
+
+service OrderManagement {
+  rpc getOrder(OrderRequest) returns (OrderResponse);
+
+  rpc getOrderClientStream(stream OrderRequest) returns (OrderResponse);
+
+  rpc getOrderServerStream(OrderRequest) returns (stream OrderResponse);
+
+  rpc getOrderBidiStream(stream OrderRequest) returns (stream OrderResponse);
+}
+
+message OrderRequest {
+  string order = 1;
+}
+
+message OrderResponse {
+  string item = 1;
+  string timestamp = 2;
+}
