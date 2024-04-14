@@ -17,11 +17,11 @@ class OrderManager(OrderManagement_pb2_grpc.OrderManagementServicer):
             if order in ServerOrders:
                 response.item.append(order)
                 response.timestamp.append(str(time.time()))
-                # return response
         return response
-    
+
     def getOrderClientStream(self, request_iterator, context):
         response = OrderManagement_pb2.OrderResponse()
+        print(str(len(list(request_iterator))) + " is len list client stream")
         for request in request_iterator:
             for order in request.order:
                 if order in ServerOrders:
@@ -30,21 +30,34 @@ class OrderManager(OrderManagement_pb2_grpc.OrderManagementServicer):
         return response
 
     def getOrderServerStream(self, request, context):
-        for order in request.order:
-            if order in ServerOrders:
+        print(request)
+        for serverOrder in ServerOrders:
+            if request.order in serverOrder:
                 response = OrderManagement_pb2.OrderResponse()
-                response.item.append(order)
-                response.timestamp.append(str(time.time()))
+                response.item = request.order
+                response.timestamp = str(time.time())
                 yield response
 
+        # for order in request.order:
+        #     if order in ServerOrders:
+        #         response = OrderManagement_pb2.OrderResponse()
+        #         response.item.append(order)
+        #         response.timestamp.append(str(time.time()))
+        #         yield response
+
     def getOrderBidiStream(self, request_iterator, context):
+        print("here")
+        print(str(len(list(request_iterator))) + " is len list")
         for request in request_iterator:
+
             response = OrderManagement_pb2.OrderResponse()
+            print(response)
             for order in request.order:
+                print(order)
                 if order in ServerOrders:
                     response.item.append(order)
                     response.timestamp.append(str(time.time()))
-            yield response
+                    yield response
 
 
 def serve():

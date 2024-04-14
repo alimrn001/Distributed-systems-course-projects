@@ -13,10 +13,10 @@ service OrderManagement {
 }
 
 message OrderRequest {
-  repeated string order = 1;
+  string order = 1;
 }
 
 message OrderResponse {
-  repeated string item = 1;
-  repeated string timestamp = 2;
+  string item = 1;
+  string timestamp = 2;
 }
