@@ -7,10 +7,6 @@ def getUserOrderListAsInput():
     user_order_items = input("Enter elements separated by commas and space afterwards: ")
     return [item.strip() for item in user_order_items.split(",") if item.strip()]
 
-def printResponseItems(response):
-    for item, timestamp in zip(response.item, response.timestamp):
-        print(f"Item name: {item}, Timestamp: {timestamp}")
-
 def getOrderServerStream(stub):
     user_order_item = input("Enter item name: ")
     responseServerStream = stub.getOrderServerStream(OrderManagement_pb2.OrderRequest(order=[user_order_item]))
@@ -23,7 +19,6 @@ def getOrderBidiStream(stub):
     responseBidiStream = stub.getOrderBidiStream(request_iterator_bidi)
     for serverStreamResponseItem in responseBidiStream:
         print(f"Item name: {serverStreamResponseItem.item}, Timestamp: {serverStreamResponseItem.timestamp}")
-        # printResponseItems(serverStreamResponseItem)
 
 def run():
     with grpc.insecure_channel("localhost:50053") as channel:
