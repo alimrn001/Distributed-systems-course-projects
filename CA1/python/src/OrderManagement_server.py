@@ -21,7 +21,6 @@ class OrderManager(OrderManagement_pb2_grpc.OrderManagementServicer):
 
     def getOrderClientStream(self, request_iterator, context):
         response = OrderManagement_pb2.OrderResponse()
-        print(str(len(list(request_iterator))) + " is len list client stream")
         for request in request_iterator:
             for order in request.order:
                 if order in ServerOrders:
@@ -30,38 +29,26 @@ class OrderManager(OrderManagement_pb2_grpc.OrderManagementServicer):
         return response
 
     def getOrderServerStream(self, request, context):
-        print(request)
         for serverOrder in ServerOrders:
-            if request.order in serverOrder:
-                response = OrderManagement_pb2.OrderResponse()
-                response.item = serverOrder
-                response.timestamp = str(time.time())
-                yield response
-
-        # for order in request.order:
-        #     if order in ServerOrders:
-        #         response = OrderManagement_pb2.OrderResponse()
-        #         response.item.append(order)
-        #         response.timestamp.append(str(time.time()))
-        #         yield response
+            for request_order in request.order:
+                if request_order in serverOrder:
+                    response = OrderManagement_pb2.OrderResponse()
+                    response.item = serverOrder
+                    response.timestamp = str(time.time())
+                    yield response
 
     def getOrderBidiStream(self, request_iterator, context):
-        print("here")
-        print(str(len(list(request_iterator))) + " is len list")
         for request in request_iterator:
-
             response = OrderManagement_pb2.OrderResponse()
-            print(response)
             for order in request.order:
-                print(order)
                 if order in ServerOrders:
-                    response.item.append(order)
-                    response.timestamp.append(str(time.time()))
+                    response.item = order
+                    response.timestamp = str(time.time())
                     yield response
 
 
 def serve():
-    port = "50052"
+    port = "50053"
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     OrderManagement_pb2_grpc.add_OrderManagementServicer_to_server(
         OrderManager(), server)

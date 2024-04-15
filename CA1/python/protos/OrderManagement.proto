@@ -13,7 +13,7 @@ service OrderManagement {
 }
 
 message OrderRequest {
-  string order = 1;
+  repeated string order = 1; // Use 'repeated' to allow multiple items in one request
 }
 
 message OrderResponse {
