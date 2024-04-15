@@ -8,41 +8,59 @@ import OrderManagement_pb2_grpc
 
 
 def printResponseItems(response):
-    print(len(response))
-    for i in range(0, len(response.item)):
-        print(
-            "{item name: " + response.item[i] + ", Timestamp: ", response.timestamp[i] + "}")
+    for item, timestamp in zip(response.item, response.timestamp):
+        print(f"Item name: {item}, Timestamp: {timestamp}")
+    
+    # print(len(response))
+    # for i in range(0, len(response.item)):
+    #     print(
+    #         "{item name: " + response.item[i] + ", Timestamp: ", response.timestamp[i] + "}")
 
-
-def getOrderServerStream(stub):
-    user_order_item = input("enter your item name:")
-    responseServerStream = stub.getOrderServerStream(
-        OrderManagement_pb2.OrderRequest(order=user_order_item))
-    for serverStreamResponseItem in responseServerStream:
-        printResponseItems(serverStreamResponseItem)
-
-
-# def getOrderBidiStream(stub):
-
-
-def run():
+def getUserOrderListAsInput():
     user_order_items = []
-
     while True:
-        # a bug here! items like green apple are ignored cause they have spaces, fix that
-        input_line = input("Enter elements separated by spaces: ")
-        input_elements = input_line.split()
-
+        input_line = input("Enter elements separated by commas and space afterwards: ")
+        input_elements = input_line.split(", ")
         if input_elements:
             user_order_items.extend(input_elements)
             break
-
         print("Please enter at least one element.")
+    return user_order_items
+
+def getOrderServerStream(stub):
+    user_order_item = input("enter your item name:")
+    responseServerStream = stub.getOrderServerStream(OrderManagement_pb2.OrderRequest(order=user_order_item))
+    for serverStreamResponseItem in responseServerStream:
+        print(serverStreamResponseItem)
+
+
+def getOrderBidiStream(stub):
+    user_order_items = getUserOrderListAsInput()
+    request_iterator_bidi = (OrderManagement_pb2.OrderRequest(order=item) for item in user_order_items)
+    responseBidiStream = stub.getOrderBidiStream(request_iterator_bidi)
+    for serverStreamResponseItem in responseBidiStream:
+        printResponseItems(serverStreamResponseItem)
+
+def run():
+    # user_order_items = []
+
+    while True:
+        communication_pattern_selector = input("Please select your communication pattern.\n Press [0] for server-streaming RPC, or press [1] for bidirectional streaming RPC.")
+        if communication_pattern_selector == "0" or communication_pattern_selector == "1":
+            break
+    
+    
 
     with grpc.insecure_channel("localhost:50052") as channel:
 
         # print("\n----------------------------------------------------------\n\nExecuting the unary RPC approach...\n\n")
         stub = OrderManagement_pb2_grpc.OrderManagementStub(channel)
+        
+        if(communication_pattern_selector == "0"):
+            getOrderServerStream(stub)
+        elif(communication_pattern_selector == "1"):
+            getOrderBidiStream(stub)
+        
         # response = stub.getOrder(
         #     OrderManagement_pb2.OrderRequest(order=user_order_items))
         # # check errors and size equality for two arrays - better change the response structure to array of objects
@@ -55,13 +73,13 @@ def run():
         # responseClientStream = stub.getOrderClientStream(request_iterator)
         # printResponseItems(responseClientStream)
 
-        print("\n----------------------------------------------------------\n\nExecuting the server-stream approach...\n\n")
+        # print("\n----------------------------------------------------------\n\nExecuting the server-stream approach...\n\n")
 
-        responseServerStream = stub.getOrderServerStream(
-            OrderManagement_pb2.OrderRequest(order=user_order_items[0]))
-        print(responseServerStream)
-        for serverStreamResponseItem in responseServerStream:
-            print(serverStreamResponseItem)
+        # responseServerStream = stub.getOrderServerStream(
+        #     OrderManagement_pb2.OrderRequest(order=user_order_items[0]))
+        # print(responseServerStream)
+        # for serverStreamResponseItem in responseServerStream:
+        #     print(serverStreamResponseItem)
         #     printResponseItems(serverStreamResponseItem)
 
         # print("\n----------------------------------------------------------\n\nExecuting the bidirectional-stream approach...\n\n")

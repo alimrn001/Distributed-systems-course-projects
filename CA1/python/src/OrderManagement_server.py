@@ -34,7 +34,7 @@ class OrderManager(OrderManagement_pb2_grpc.OrderManagementServicer):
         for serverOrder in ServerOrders:
             if request.order in serverOrder:
                 response = OrderManagement_pb2.OrderResponse()
-                response.item = request.order
+                response.item = serverOrder
                 response.timestamp = str(time.time())
                 yield response
 
