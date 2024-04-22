@@ -13,6 +13,7 @@ type Event struct {
 	Date				time.Time
 	TotalTickets		int
 	AvailableTickets 	int
+	mutx				sync.Mutex // Mutex for synchronizing access to AvailableTickets
 }
 
 type Ticket struct {
@@ -49,6 +50,35 @@ func (ts *TicketService) ListEvents() []*Event {
 		return true
 	})
 	return events
+}
+
+func (ts *TicketService) BookTickets(eventID string, numTickets int) ([]string, error) {
+	//implement concurrency control here
+	//...
+	event, ok := ts.events.Load(eventID)
+	if !ok {
+		return nil, fmt.Errorf("event not found")
+	}
+	ev := event.(*Event)
+
+	ev.mutx.Lock()
+	defer ev.mutx.Unlock()
+
+	if ev.AvailableTickets < numTickets { //critical section
+		return nil, fmt.Errorf("not enough tickets available")
+	}
+
+	var ticketIDs []string
+	for i := 0; i < numTickets; i++ {
+		ticketID := utils.GenerateUUID()
+		ticketIDs = append(ticketIDs, ticketID)
+		//store the ticket in a seperate data structure if needed
+	}
+
+	ev.AvailableTickets -= numTickets
+	ts.events.Store(eventID, ev)
+
+	return ticketIDs, nil
 }
 
 
