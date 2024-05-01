@@ -15,6 +15,8 @@ const DATE_LAYOUT = "2006-01-02_15:04:05"
 
 const COMMANDS = "help,exit,create,book,list"
 
+const TOTAL_NUM_OF_PROCESS = 3
+
 const HELP_MESSAGE = `
 Commands are:
 	* create new event:
@@ -29,7 +31,6 @@ Commands are:
 		- exit`
 
 type JobID struct {
-	ID   int
 	mutx sync.Mutex
 }
 
@@ -49,6 +50,13 @@ type Ticket struct {
 
 type TicketService struct {
 	events sync.Map
+}
+
+type ProcessManager struct {
+	ID                int
+	numProcessRunning int
+	mutx              sync.Mutex
+	wg                sync.WaitGroup
 }
 
 func NewTicketService() *TicketService {
@@ -171,15 +179,19 @@ func OutputManager(ch <-chan string) {
 
 func ErrorManager(ch <-chan error) {
 	for e := range ch {
-		fmt.Printf("||||||||||||||||| Error: %s |||||||||||||||||\n", e.Error())
+		fmt.Printf("**** Error: %s ****\n", e.Error())
 	}
 }
 
-func CommandHandler(commands []string, jobId *JobID, ticketService *TicketService, chErr chan error, chOutput chan string) {
-	jobId.mutx.Lock()
-	jobId.ID = jobId.ID + 1
-	id := jobId.ID
-	jobId.mutx.Unlock()
+func CommandHandler(commands []string, processManager *ProcessManager, ticketService *TicketService, chErr chan error, chOutput chan string) {
+
+	processManager.mutx.Lock()
+	processManager.ID++
+	processManager.numProcessRunning++
+	id := processManager.ID
+	processManager.mutx.Unlock()
+	defer processManager.wg.Done()
+
 	chOutput <- fmt.Sprintf("Your request with id %d is processing ... \n", id)
 
 	switch commands[0] {
@@ -202,14 +214,18 @@ func main() {
 	ticketService.CreateEvent("Conference", time.Now(), 200)
 
 	reader := bufio.NewReader(os.Stdin)
-	var jobId JobID
-	jobId.ID = 0
+	var processManager ProcessManager
 	chOutput := make(chan string)
 	chErr := make(chan error)
 
 	go OutputManager(chOutput)
 	go ErrorManager(chErr)
-	for true {
+	for {
+		if processManager.numProcessRunning >= TOTAL_NUM_OF_PROCESS {
+			fmt.Printf("Error: maximum request reached. wait ...\n")
+			processManager.wg.Wait()
+		}
+
 		inputCommand, _ := reader.ReadString('\n')
 		commands := strings.Split(strings.TrimSpace(strings.ToLower(inputCommand)), " ")
 
@@ -218,10 +234,12 @@ func main() {
 		} else if commands[0] == "help" {
 			fmt.Println(HELP_MESSAGE)
 		} else if strings.Contains(COMMANDS, commands[0]) {
-			go CommandHandler(commands, &jobId, ticketService, chErr, chOutput)
+			processManager.wg.Add(1)
+			go CommandHandler(commands, &processManager, ticketService, chErr, chOutput)
 		} else {
 			chErr <- fmt.Errorf("Erro: command not found")
 		}
+
 	}
 
 	close(chOutput)
