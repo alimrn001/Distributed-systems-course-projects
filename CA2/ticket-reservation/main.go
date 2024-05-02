@@ -17,6 +17,8 @@ const COMMANDS = "help,exit,create,book,list"
 
 const TOTAL_NUM_OF_PROCESS = 3
 
+const NUM_CACHE = 3
+
 const HELP_MESSAGE = `
 Commands are:
 	* create new event:
@@ -48,7 +50,15 @@ type Ticket struct {
 	EventID string
 }
 
+type Cache struct {
+	accessCount sync.Map
+	events      [NUM_CACHE]*Event
+	// mutxs           [NUM_CACHE]sync.Mutex
+	accessCountMutx sync.Mutex
+}
+
 type TicketService struct {
+	cache  Cache
 	events sync.Map
 }
 
@@ -87,17 +97,23 @@ func (ts *TicketService) ListEvents() []*Event {
 }
 
 func (ts *TicketService) BookTickets(eventID string, numTickets int) ([]string, error) {
-	//implement concurrency control here
-	//...
-	event, ok := ts.events.Load(eventID)
+
+	// use cache or access main database
+	var event any
+	var ok bool
+	event, ok = ts.cache.FindEvent(eventID)
 	if !ok {
-		return nil, fmt.Errorf("event not found")
+		event, ok = ts.events.Load(eventID)
+		if !ok {
+			return nil, fmt.Errorf("event not found")
+		}
 	}
+
 	ev := event.(*Event)
+	ts.cache.AddAccessCountAndUpdateCache(eventID, ev)
 
 	ev.mutx.Lock()
 	defer ev.mutx.Unlock()
-
 	if ev.AvailableTickets < numTickets { //critical section
 		return nil, fmt.Errorf("not enough tickets available")
 	}
@@ -121,6 +137,58 @@ func (ts *TicketService) PrintListEvents(chOutput chan string) {
 	for _, event := range events {
 		chOutput <- fmt.Sprintf("ID: %s, Name: %s, Date: %s, Total Tickets: %d, Available Tickets: %d\n", event.ID, event.Name, event.Date.String(), event.TotalTickets, event.AvailableTickets)
 	}
+}
+
+func (cache *Cache) AddAccessCountAndUpdateCache(eventId string, event *Event) {
+	count, ok := cache.accessCount.Load(eventId)
+	if !ok {
+		cache.accessCount.Store(eventId, 1)
+
+	} else {
+		cache.accessCount.Store(eventId, count.(int)+1)
+	}
+
+	// update accessCount
+	cache.accessCountMutx.Lock()
+	defer cache.accessCountMutx.Unlock()
+	for i, ev := range cache.events {
+		if ev == nil {
+			cache.events[i] = event
+			break
+		}
+		if ev == event {
+			if i == 0 {
+				break
+			}
+			higherAccess, _ := cache.accessCount.Load(cache.events[i-1].ID)
+			lowerAccess, _ := cache.accessCount.Load(event.ID)
+			if lowerAccess.(int) > higherAccess.(int) { // swap
+				cache.events[i] = cache.events[i-1]
+				cache.events[i-1] = event
+			}
+			break
+		}
+		if i == len(cache.events)-1 { // last element
+			higherAccess, _ := cache.accessCount.Load(ev.ID)
+			lowerAccess, _ := cache.accessCount.Load(event.ID)
+
+			if lowerAccess.(int) > higherAccess.(int) { // replace
+				cache.events[i] = event
+			}
+		}
+	}
+}
+
+func (cache *Cache) FindEvent(eventId string) (*Event, bool) {
+	for _, ev := range cache.events {
+		if ev == nil {
+			return nil, false
+		}
+		if ev.ID == eventId {
+			return ev, true
+		}
+	}
+	return nil, false
 }
 
 func CreateTicketCommand(jobId int, ts *TicketService, commands []string, chErr chan error, chOutput chan string) {
@@ -244,5 +312,4 @@ func main() {
 
 	close(chOutput)
 	close(chErr)
-
 }
